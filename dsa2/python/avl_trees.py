@@ -15,10 +15,32 @@ class AVLTree:
         self.root = None
 
     def height(self):
-        pass
+        return self.root.height
 
     def insert(self, n):
         self.root = self.__insert(self.root, n)
+
+    def is_balanced(self):
+        return self.__is_balanced(self.root)
+
+    def is_perfect(self):
+        return self.__is_perfect(self.root, self.root.height)
+
+    def __is_perfect(self, root, h):
+        if root is None:
+            return True
+        if root.height != h:
+            return False
+        if h > 0 and (root.left is None or root.right is None):
+            return False
+        return self.__is_perfect(root.left, h-1) and self.__is_perfect(root.right, h-1)
+
+    def __is_balanced(self, root):
+        if root is None:
+            return True
+        if abs(self.__node_height(root.left) - self.__node_height(root.right)) > 1:
+            return False
+        return self.__is_balanced(root.left) and self.__is_balanced(root.right)
 
     def __insert(self, root, n):
         if root == None:
@@ -30,9 +52,7 @@ class AVLTree:
             root.left = self.__insert(root.left, n)
 
         root = self.__set_node_height(root)
-
         root = self.__balance(root)
-
         return root
 
     def __balance(self, node):
@@ -90,6 +110,9 @@ t = AVLTree()
 t.insert(10)
 t.insert(30)
 t.insert(20)
+
+print(t.is_balanced())
+print(t.is_perfect())
 
 pass
 # %%
