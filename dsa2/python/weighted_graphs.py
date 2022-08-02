@@ -1,3 +1,7 @@
+from queue import PriorityQueue
+import sys
+
+
 class WeightedGraph:
     class Node:
         def __init__(self, label) -> None:
@@ -44,6 +48,52 @@ class WeightedGraph:
             s += str(n) + "\n"
         return s
 
+    def get_node(self, label):
+        if label not in self.nodes:
+            raise Exception(f"Node {label} does not exist")
+        return self.nodes[label]
+
+    def get_shortest_path(self, from_node, to_node):
+        q = PriorityQueue()
+        dists = {}
+        prevs = {}
+        node_ids = {}
+        for n in self.nodes.values():
+            dists[n] = sys.float_info.max
+            prevs[n] = None
+            node_ids[id(n)] = n
+        visited = set()
+        f = self.get_node(from_node)
+        t = self.get_node(to_node)
+        dists[f] = 0
+        q.put((-1, id(f), f))
+
+        while q.qsize():
+            _, current_node_id, current_node = q.get()
+            #current_node = node_ids[current_node_id]
+            if current_node is t:
+                continue
+            visited.add(current_node)
+            current_dist = dists[current_node]
+            for edge in current_node.edges.values():
+                next_node = edge.to_node
+                if next_node not in visited:
+                    weight = edge.weight
+                    next_node_dist = current_dist + weight
+                    if next_node_dist < dists[next_node]:
+                        dists[next_node] = next_node_dist
+                        prevs[next_node] = current_node
+                        q.put((dists[next_node], id(next_node), next_node))
+
+        shortest_path = []
+        path_node = t
+        while path_node is not f:
+            shortest_path.append(path_node.label)
+            path_node = prevs[path_node]
+        shortest_path.append(f.label)
+
+        return dists[t], list(reversed(shortest_path))
+
 
 if __name__ == "__main__":
     wg = WeightedGraph()
@@ -53,4 +103,17 @@ if __name__ == "__main__":
     wg.add_edge("A", "B", 3)
     wg.add_edge("A", "C", 2)
     print(wg)
+
+    dja = WeightedGraph()
+    for n in "ABCDE":
+        dja.add_node(n)
+    dja.add_edge("A", "B", 1)
+    dja.add_edge("A", "C", 4)
+    dja.add_edge("A", "D", 2)
+    dja.add_edge("C", "D", 1)
+    dja.add_edge("B", "D", 6)
+    dja.add_edge("B", "E", 1)
+    dja.add_edge("D", "E", 10)
+    assert dja.get_shortest_path("A", "E") == (2, ['A', 'B', 'E'])
+    assert dja.get_shortest_path("C", "E") == (5, ['C', 'D', 'A', 'B', 'E'])
     pass
