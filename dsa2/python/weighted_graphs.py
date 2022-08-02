@@ -94,6 +94,44 @@ class WeightedGraph:
 
         return dists[t], list(reversed(shortest_path))
 
+    def has_cycle(self):
+        visited = set()
+
+        def cycle_step(current_node, parent):
+            visited.add(current_node)
+            for node in current_node.edges.values():
+                if node.to_node is not parent:
+                    if node.to_node in visited:
+                        return True
+                    return cycle_step(node.to_node, current_node)
+            return False
+
+        for node in self.nodes.values():
+            if node not in visited:
+                if cycle_step(node, None):
+                    return True
+        return False
+
+    def get_min_spanning_tree(self, root_label):  # prims algo
+        root = self.get_node(root_label)
+        current_tree = [root]
+        visited_nodes = set(current_tree)
+        while True:
+            min_edge = None
+            min_edge_weight = sys.float_info.max
+            for n in current_tree:
+                for edge in n.edges.values():
+                    if edge.to_node not in visited_nodes:
+                        if edge.weight < min_edge_weight:
+                            min_edge = edge
+                            min_edge_weight = edge.weight
+            if min_edge:
+                visited_nodes.add(min_edge.to_node)
+                current_tree.append(min_edge.to_node)
+            else:
+                break
+        return [n.label for n in current_tree]
+
 
 if __name__ == "__main__":
     wg = WeightedGraph()
@@ -116,4 +154,35 @@ if __name__ == "__main__":
     dja.add_edge("D", "E", 10)
     assert dja.get_shortest_path("A", "E") == (2, ['A', 'B', 'E'])
     assert dja.get_shortest_path("C", "E") == (5, ['C', 'D', 'A', 'B', 'E'])
+
+    no_cycle = WeightedGraph()
+    no_cycle.add_node("A")
+    no_cycle.add_node("B")
+    no_cycle.add_node("C")
+    no_cycle.add_node("D")
+    no_cycle.add_edge("A", "B", 1)
+    no_cycle.add_edge("B", "C", 1)
+    no_cycle.add_edge("C", "D", 1)
+    assert no_cycle.has_cycle() == False
+
+    a_cycle = WeightedGraph()
+    a_cycle.add_node("A")
+    a_cycle.add_node("B")
+    a_cycle.add_node("C")
+    a_cycle.add_node("D")
+    a_cycle.add_edge("A", "B", 1)
+    a_cycle.add_edge("B", "C", 1)
+    a_cycle.add_edge("C", "D", 1)
+    a_cycle.add_edge("D", "A", 1)
+    assert a_cycle.has_cycle() == True
+
+    min_tree = WeightedGraph()
+    for n in "ABCD":
+        min_tree.add_node(n)
+    min_tree.add_edge("A", "B", 2)
+    min_tree.add_edge("A", "C", 1)
+    min_tree.add_edge("C", "B", 1)
+    min_tree.add_edge("B", "D", 4)
+    min_tree.add_edge("C", "D", 5)
+    assert min_tree.get_min_spanning_tree("A") == ['A', 'C', 'B', 'D']
     pass
